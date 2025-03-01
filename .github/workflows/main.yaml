@@ -92,29 +92,37 @@ jobs:
           path: artifacts
 
       - name: Generate release name
-        id: release_name
         run: |
-          # 日付とランダム文字列でリリース名を生成
           DATE=$(date +'%Y%m%d')
           HASH=$(git rev-parse --short HEAD)
           echo "RELEASE_NAME=release-${DATE}-${HASH}" >> $GITHUB_ENV
           echo "RELEASE_TITLE=Release ${DATE} (${HASH})" >> $GITHUB_ENV
 
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git curl
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
+            sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+            sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y gh
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # artifacts ディレクトリ内のファイルリストを作成
-          FILES_TO_UPLOAD=""
-          for file in artifacts/*/*; do
-            if [ -f "$file" ]; then
-              FILES_TO_UPLOAD="${FILES_TO_UPLOAD} ${file}"
-            fi
-          done
-
-          # リリースを作成
-          gh release create ${{ env.RELEASE_NAME }} \
+          gh release create "${{ env.RELEASE_NAME }}" \
             --title "${{ env.RELEASE_TITLE }}" \
             --notes "Auto-generated release from release branch commit ${GITHUB_SHA}" \
-            --target $GITHUB_REF_NAME \
-            $FILES_TO_UPLOAD
+            --target "$GITHUB_REF_NAME"
+
+          # アップロード対象ファイル一覧を出力
+          find artifacts -type f | sort
+
+          # 個別にファイルをアップロード
+          find artifacts -type f | while read file; do
+            gh release upload "${{ env.RELEASE_NAME }}" "$file" --clobber
+          done
