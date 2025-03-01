@@ -63,12 +63,6 @@ jobs:
             # Linux用のfindコマンド (GNU find)
             find target/${{ matrix.target }}/release -type f -executable -not -path "*/\.*" -not -path "*/deps/*" -not -path "*/examples/*" -not -path "*/incremental/*" -exec cp {} artifacts/${{ matrix.artifact_name }}/ \;
           fi
-          
-          # リソースディレクトリのコピー
-          if [ -d "resource" ]; then
-            mkdir -p artifacts/${{ matrix.artifact_name }}/resource
-            cp -r resource/* artifacts/${{ matrix.artifact_name }}/resource/
-          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -116,18 +110,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ env.RELEASE_NAME }}" \
-            --title "${{ env.RELEASE_TITLE }}" \
-            --notes "Auto-generated release from release branch commit ${GITHUB_SHA}" \
-            --target "$GITHUB_REF_NAME"
+              --title "${{ env.RELEASE_TITLE }}" \
+              --notes "Auto-generated release from release branch commit ${GITHUB_SHA}" \
+              --target "$GITHUB_REF_NAME"
 
-          # アップロード対象ファイル一覧を出力
-          find artifacts -type f | sort
+            # アップロード対象ファイル一覧を出力
+            find artifacts -type f | sort
 
-          # 個別にファイルをアップロード（ディレクトリ名＝artifact_nameを付ける）
-          find artifacts -type f | while read file; do
-            artifact_dir="$(basename "$(dirname "$file")")"
-            filename="$(basename "$file")"
-            gh release upload "${{ env.RELEASE_NAME }}" "$file" \
-              --clobber \
-              --name "${artifact_dir}-${filename}"
-          done
+            # ファイルを一時的にリネームしてアップロード
+            find artifacts -type f | while read file; do
+              artifact_dir="$(basename "$(dirname "$file")")"
+              filename="$(basename "$file")"
+              renamed_file="artifacts/${artifact_dir}-${filename}"
+              cp "$file" "$renamed_file"
+              gh release upload "${{ env.RELEASE_NAME }}" "$renamed_file" --clobber
+            done
