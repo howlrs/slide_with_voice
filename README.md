@@ -10,9 +10,9 @@
   
 ※ ファイル一つに対して、複数行のテキスト及び音声を動画生成される
 
-![紹介動画](https://youtu.be/MiVK6Sxf-vQ)
+[紹介動画](https://youtu.be/MiVK6Sxf-vQ)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MiVK6Sxf-vQ?si=" title="Rust x Voicevoxプログラマブル動画生成" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Slide with voice(vox)](https://github.com/howlrs/slide_with_voice/blob/release/images/icon.png?raw=true)](https://www.youtube.com/watch?v=MiVK6Sxf-vQ)
 
 
 ## 依存関係
