@@ -56,8 +56,11 @@ jobs:
           # バイナリをディレクトリ内にコピー
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             cp target/${{ matrix.target }}/release/*.exe artifacts/${{ matrix.artifact_name }}/
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            # macOS用のfindコマンド (BSD find)
+            find target/${{ matrix.target }}/release -type f -perm +111 -not -path "*/\.*" -not -path "*/deps/*" -not -path "*/examples/*" -not -path "*/incremental/*" -exec cp {} artifacts/${{ matrix.artifact_name }}/ \;
           else
-            # Find actual binary (executable files without extension)
+            # Linux用のfindコマンド (GNU find)
             find target/${{ matrix.target }}/release -type f -executable -not -path "*/\.*" -not -path "*/deps/*" -not -path "*/examples/*" -not -path "*/incremental/*" -exec cp {} artifacts/${{ matrix.artifact_name }}/ \;
           fi
           
