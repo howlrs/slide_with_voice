@@ -50,17 +50,20 @@ jobs:
       - name: Prepare artifacts
         shell: bash
         run: |
-          mkdir -p artifacts
+          # 各プラットフォーム用にディレクトリを作成
+          mkdir -p artifacts/${{ matrix.artifact_name }}
+          
+          # バイナリをディレクトリ内にコピー
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp target/${{ matrix.target }}/release/*.exe artifacts/${{ matrix.artifact_name }}
+            cp target/${{ matrix.target }}/release/*.exe artifacts/${{ matrix.artifact_name }}/
           else
-            cp target/${{ matrix.target }}/release/*[^\.d] artifacts/${{ matrix.artifact_name }}
+            cp target/${{ matrix.target }}/release/*[^\.d] artifacts/${{ matrix.artifact_name }}/
           fi
           
           # リソースディレクトリのコピー
           if [ -d "resource" ]; then
-            mkdir -p artifacts/resource
-            cp -r resource/* artifacts/resource/
+            mkdir -p artifacts/${{ matrix.artifact_name }}/resource
+            cp -r resource/* artifacts/${{ matrix.artifact_name }}/resource/
           fi
 
       - name: Upload artifacts
