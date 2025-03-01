@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use log::{error, info};
 
@@ -9,6 +12,12 @@ mod slide;
 #[tokio::main]
 async fn main() {
     init();
+    // 必要なファイル群の存在を確認
+    // なければ作成して終了
+    if !exists_resource_dir() {
+        create_resource_dir();
+        return;
+    }
 
     // リソースとなるファイルから動画のセクションを生成
     let text_filename = PathBuf::from(std::env::var("DEFAULT_RESOURCE_FILE_PATH").unwrap());
@@ -71,4 +80,37 @@ async fn main() {
 fn init() {
     dotenv::from_filename(".env.sample").ok();
     env_logger::init();
+}
+
+fn exists_resource_dir() -> bool {
+    let resource_text = PathBuf::from(std::env::var("DEFAULT_RESOURCE_FILE_PATH").unwrap());
+    let resource_dir = Path::new(&resource_text).parent().unwrap();
+    if resource_dir.exists() {
+        return true;
+    }
+
+    false
+}
+
+fn create_resource_dir() {
+    let resource_text = PathBuf::from(std::env::var("DEFAULT_RESOURCE_FILE_PATH").unwrap());
+    let resource_dir = Path::new(&resource_text).parent().unwrap();
+    std::fs::create_dir_all(resource_dir).unwrap();
+
+    // mkdir resource/, resource/slides/, resource/fonts/
+    let resource_dirs = vec![
+        resource_dir.join("slides"),
+        resource_dir.join("fonts"),
+        resource_dir.join("videos"),
+    ];
+
+    for dir in resource_dirs {
+        std::fs::create_dir_all(dir).unwrap();
+    }
+
+    // make resource.txt
+    let mut file = std::fs::File::create(&resource_text).unwrap();
+    let text = "当ファイルを更新して実行してください。";
+    file.write_all(text.as_bytes()).unwrap();
+    file.flush().unwrap();
 }
