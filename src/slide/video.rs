@@ -172,7 +172,7 @@ mod tests {
 
         let (args, output_filename) = create_args(key, input_filepath, input_voice, Some(op));
 
-        assert_eq!(args.len(), 24);
+        assert_eq!(args.len(), 23);
         assert_eq!(output_filename, r"output\test.mp4");
     }
 
