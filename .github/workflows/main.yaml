@@ -91,9 +91,30 @@ jobs:
         with:
           path: artifacts
 
+      - name: Generate release name
+        id: release_name
+        run: |
+          # 日付とランダム文字列でリリース名を生成
+          DATE=$(date +'%Y%m%d')
+          HASH=$(git rev-parse --short HEAD)
+          echo "RELEASE_NAME=release-${DATE}-${HASH}" >> $GITHUB_ENV
+          echo "RELEASE_TITLE=Release ${DATE} (${HASH})" >> $GITHUB_ENV
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/**/*
-          generate_release_notes: true
-          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # artifacts ディレクトリ内のファイルリストを作成
+          FILES_TO_UPLOAD=""
+          for file in artifacts/*/*; do
+            if [ -f "$file" ]; then
+              FILES_TO_UPLOAD="${FILES_TO_UPLOAD} ${file}"
+            fi
+          done
+
+          # リリースを作成
+          gh release create ${{ env.RELEASE_NAME }} \
+            --title "${{ env.RELEASE_TITLE }}" \
+            --notes "Auto-generated release from release branch commit ${GITHUB_SHA}" \
+            --target $GITHUB_REF_NAME \
+            $FILES_TO_UPLOAD
